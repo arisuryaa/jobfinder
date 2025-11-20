@@ -55,6 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $type = $conn->real_escape_string($_POST['type']);
     $salary = $conn->real_escape_string($_POST['salary']);
     $description = $conn->real_escape_string($_POST['description']);
+    $status = $conn->real_escape_string($_POST['status']);
     $logo_escaped = $logo ? $conn->real_escape_string($logo) : null;
     
     // Update data ke database
@@ -66,6 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             type = '$type',
             salary = '$salary',
             description = '$description',
+            status = '$status',
             logo = " . ($logo_escaped ? "'$logo_escaped'" : "NULL") . "
             WHERE id = $id";
     
@@ -124,16 +126,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a href="index.php" class="brand-link">
-                <!-- <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
-                    style="opacity: .8"> -->
                 <span class="brand-text font-weight-light">JobFinder</span>
             </a>
 
             <!-- Sidebar -->
             <div class="sidebar">
-                <!-- Sidebar user panel (optional) -->
-
-
                 <!-- SidebarSearch Form -->
                 <div class="form-inline mt-2">
                     <div class="input-group" data-widget="sidebar-search">
@@ -151,11 +148,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                         data-accordion="false">
-                        <!-- Add icons to the links using the .nav-icon class
-               with font-awesome or any other icon font library -->
                         <li class="nav-item menu-open">
                             <a href="#" class="nav-link active">
-                                <!-- <i class="nav-icon fas fa-tachometer-alt"></i> -->
                                 <p>
                                     Menu
                                     <i class="right fas fa-angle-left"></i>
@@ -188,8 +182,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </li>
                             </ul>
                         </li>
-
-
                     </ul>
                 </nav>
                 <!-- /.sidebar-menu -->
@@ -316,9 +308,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                             Other</option>
                                                     </select>
                                                 </div>
-                                            </div>
 
-                                            <div class="col-md-6">
                                                 <!-- Type -->
                                                 <div class="form-group">
                                                     <label for="type">Tipe Pekerjaan <span
@@ -342,7 +332,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                             Internship</option>
                                                     </select>
                                                 </div>
+                                            </div>
 
+                                            <div class="col-md-6">
                                                 <!-- Salary -->
                                                 <div class="form-group">
                                                     <label for="salary">Gaji</label>
@@ -351,6 +343,52 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                         placeholder="Contoh: Rp 5.000.000 - Rp 8.000.000">
                                                     <small class="form-text text-muted">Opsional. Kosongkan jika tidak
                                                         ingin menampilkan gaji.</small>
+                                                </div>
+
+                                                <!-- Status -->
+                                                <div class="form-group">
+                                                    <label for="status">Status Lowongan <span
+                                                            class="text-danger">*</span></label>
+                                                    <select class="form-control" id="status" name="status" required>
+                                                        <?php $current_status = isset($job['status']) ? $job['status'] : 'active'; ?>
+                                                        <option value="Pending"
+                                                            <?php echo ($current_status == 'pending') ? 'selected' : ''; ?>>
+                                                            Pending
+                                                        </option>
+                                                        <option value="inactive"
+                                                            <?php echo ($current_status == 'inactive') ? 'selected' : ''; ?>>
+                                                            Inactive
+                                                        </option>
+                                                        <option value="active"
+                                                            <?php echo ($current_status == 'Active') ? 'selected' : ''; ?>>
+                                                            Active
+                                                        </option>
+
+                                                    </select>
+                                                    <small class="form-text text-muted">
+                                                        Status saat ini:
+                                                        <?php 
+                                                            $status_badge = 'badge-secondary';
+                                                            $status_text = 'Active';
+                                                            
+                                                            if ($current_status == 'active') {
+                                                                $status_badge = 'badge-success';
+                                                                $status_text = 'Aktif';
+                                                            } elseif ($current_status == 'closed') {
+                                                                $status_badge = 'badge-danger';
+                                                                $status_text = 'Ditutup';
+                                                            } elseif ($current_status == 'draft') {
+                                                                $status_badge = 'badge-secondary';
+                                                                $status_text = 'Draft';
+                                                            } elseif ($current_status == 'paused') {
+                                                                $status_badge = 'badge-warning';
+                                                                $status_text = 'Dijeda';
+                                                            }
+                                                        ?>
+                                                        <span class="badge <?php echo $status_badge; ?>">
+                                                            <?php echo $status_text; ?>
+                                                        </span>
+                                                    </small>
                                                 </div>
 
                                                 <!-- Logo -->
@@ -400,7 +438,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <a href="jobs.php" class="btn btn-default">
                                             <i class="fas fa-arrow-left"></i> Kembali
                                         </a>
-                                        <a href="delete_job.php?id=<?php echo $id; ?>"
+                                        <a href="jobs.php?delete_id=<?php echo $id; ?>"
                                             class="btn btn-danger float-right"
                                             onclick="return confirm('Apakah Anda yakin ingin menghapus lowongan ini?')">
                                             <i class="fas fa-trash"></i> Hapus

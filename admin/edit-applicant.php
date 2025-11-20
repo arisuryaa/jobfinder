@@ -57,12 +57,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Ambil data dari form dan escape untuk keamanan
     $job_id = intval($_POST['job_id']);
     $user_id = intval($_POST['user_id']);
+    $status = $conn->real_escape_string($_POST['status']);
     $cv_file_escaped = $cv_file ? $conn->real_escape_string($cv_file) : null;
     
     // Update data ke database
     $sql = "UPDATE applications SET 
             job_id = $job_id,
             user_id = $user_id,
+            status = '$status',
             cv_file = " . ($cv_file_escaped ? "'$cv_file_escaped'" : "NULL") . "
             WHERE id = $id";
     
@@ -232,7 +234,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <div class="col-sm-6">
                             <ol class="breadcrumb float-sm-right">
                                 <li class="breadcrumb-item"><a href="index.php">Home</a></li>
-                                <li class="breadcrumb-item"><a href="applications.php">Kelola Lamaran</a></li>
+                                <li class="breadcrumb-item"><a href="applicant.php">Kelola Lamaran</a></li>
                                 <li class="breadcrumb-item active">Edit Lamaran</li>
                             </ol>
                         </div>
@@ -306,6 +308,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                         required>
                                                     <small class="form-text text-muted">ID pengguna yang melamar</small>
                                                 </div>
+
+                                                <!-- Status -->
+                                                <div class="form-group">
+                                                    <label for="status">Status Lamaran <span
+                                                            class="text-danger">*</span></label>
+                                                    <select class="form-control" id="status" name="status" required>
+                                                        <option value="pending"
+                                                            <?php echo ($application['status'] == 'pending') ? 'selected' : ''; ?>>
+                                                            Pending
+                                                        </option>
+                                                        <option value="Approved"
+                                                            <?php echo ($application['status'] == 'reviewed') ? 'selected' : ''; ?>>
+                                                            Approve
+                                                        </option>
+                                                        <option value="Rejected"
+                                                            <?php echo ($application['status'] == 'interview') ? 'selected' : ''; ?>>
+                                                            Rejected
+                                                        </option>
+
+                                                    </select>
+                                                    <small class="form-text text-muted">
+                                                        Status saat ini:
+                                                        <?php 
+                                                            $status = $application['status'];
+                                                            $status_badge = 'badge-secondary';
+                                                            $status_text = 'Pending';
+                                                            
+                                                            if ($status == 'pending') {
+                                                                $status_badge = 'badge-info';
+                                                                $status_text = 'Pending';
+                                                            } elseif ($status == 'approved') {
+                                                                $status_badge = 'badge-primary';
+                                                                $status_text = 'Approve';
+                                                            } elseif ($status == 'interview') {
+                                                                $status_badge = 'badge-primary';
+                                                                $status_text = 'Interview';
+                                                            } elseif ($status == 'accepted') {
+                                                                $status_badge = 'badge-success';
+                                                                $status_text = 'Diterima';
+                                                            } elseif ($status == 'rejected') {
+                                                                $status_badge = 'badge-danger';
+                                                                $status_text = 'rejected';
+                                                            }
+                                                        ?>
+                                                        <span class="badge <?php echo $status_badge; ?>">
+                                                            <?php echo $status_text; ?>
+                                                        </span>
+                                                    </small>
+                                                </div>
                                             </div>
 
                                             <div class="col-md-6">
@@ -373,10 +424,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save"></i> Update Lamaran
                                         </button>
-                                        <a href="applications.php" class="btn btn-default">
+                                        <a href="applicant.php" class="btn btn-default">
                                             <i class="fas fa-arrow-left"></i> Kembali
                                         </a>
-                                        <a href="applications.php?delete=<?php echo $id; ?>"
+                                        <a href="applicant.php?delete=<?php echo $id; ?>"
                                             class="btn btn-danger float-right"
                                             onclick="return confirm('Apakah Anda yakin ingin menghapus lamaran ini?')">
                                             <i class="fas fa-trash"></i> Hapus

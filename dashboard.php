@@ -25,7 +25,7 @@ $res = $stmt->get_result();
                     <div><strong><?=htmlspecialchars($r['title'])?></strong>
                         <div class="small text-muted"><?=htmlspecialchars($r['applied_at'])?></div>
                     </div>
-                    <div><a class="btn btn-sm btn-outline-secondary" href="../uploads/<?=urlencode($r['cv_file'])?>"
+                    <div><a class="btn btn-sm btn-outline-secondary" href="./uploads/<?=urlencode($r['cv_file'])?>"
                             target="_blank">Download CV</a></div>
                 </div>
                 <?php endwhile; ?>

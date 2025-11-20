@@ -10,6 +10,16 @@ if(!isset($_SESSION['admin_id'])){
 // Handle Delete Request
 if(isset($_GET['delete_id'])){
     $delete_id = intval($_GET['delete_id']);
+    
+    // Get logo file path before deleting
+    $logo_query = "SELECT logo FROM jobs WHERE id = $delete_id";
+    $logo_result = mysqli_query($conn, $logo_query);
+    if($logo_row = mysqli_fetch_assoc($logo_result)){
+        if($logo_row['logo'] && file_exists($logo_row['logo'])){
+            unlink($logo_row['logo']); // Delete logo file
+        }
+    }
+    
     $delete_query = "DELETE FROM jobs WHERE id = $delete_id";
     
     if(mysqli_query($conn, $delete_query)){
@@ -118,16 +128,11 @@ if(!$result){
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a href="index.php" class="brand-link">
-                <!-- <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
-                    style="opacity: .8"> -->
                 <span class="brand-text font-weight-light">JobFinder</span>
             </a>
 
             <!-- Sidebar -->
             <div class="sidebar">
-                <!-- Sidebar user panel (optional) -->
-
-
                 <!-- SidebarSearch Form -->
                 <div class="form-inline mt-2">
                     <div class="input-group" data-widget="sidebar-search">
@@ -145,11 +150,8 @@ if(!$result){
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                         data-accordion="false">
-                        <!-- Add icons to the links using the .nav-icon class
-               with font-awesome or any other icon font library -->
                         <li class="nav-item menu-open">
                             <a href="#" class="nav-link active">
-                                <!-- <i class="nav-icon fas fa-tachometer-alt"></i> -->
                                 <p>
                                     Menu
                                     <i class="right fas fa-angle-left"></i>
@@ -182,8 +184,6 @@ if(!$result){
                                 </li>
                             </ul>
                         </li>
-
-
                     </ul>
                 </nav>
                 <!-- /.sidebar-menu -->
@@ -249,16 +249,16 @@ if(!$result){
                                     <table id="example1" class="table table-bordered table-striped">
                                         <thead>
                                             <tr>
-                                                <th>ID</th>
-                                                <th>Judul</th>
-                                                <th>Perusahaan</th>
-                                                <th>Lokasi</th>
-                                                <th>Kategori</th>
-                                                <th>Tipe</th>
-                                                <th>Gaji</th>
-                                                <th>Deskripsi</th>
-                                                <th>Tanggal Posting</th>
-                                                <th>Action</th>
+                                                <th width="3%">ID</th>
+                                                <th width="15%">Judul</th>
+                                                <th width="12%">Perusahaan</th>
+                                                <th width="10%">Lokasi</th>
+                                                <th width="10%">Kategori</th>
+                                                <th width="8%">Tipe</th>
+                                                <th width="10%">Gaji</th>
+                                                <th width="8%">Status</th>
+                                                <th width="12%">Tanggal Posting</th>
+                                                <th width="12%">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -268,55 +268,74 @@ if(!$result){
                                                 <td><?php echo htmlspecialchars($row['title']); ?></td>
                                                 <td><?php echo htmlspecialchars($row['company']); ?></td>
                                                 <td><?php echo htmlspecialchars($row['location']); ?></td>
-                                                <td><?php echo htmlspecialchars($row['category']); ?></td>
                                                 <td>
-                                                    <span class="badge badge-info">
-                                                        <?php echo htmlspecialchars($row['type']); ?>
-                                                    </span>
-                                                </td>
-                                                <td><?php echo htmlspecialchars($row['salary']); ?></td>
-                                                <td class="description-cell"
-                                                    title="<?php echo htmlspecialchars($row['description']); ?>">
-                                                    <?php echo htmlspecialchars($row['description']); ?>
+                                                    <small><?php echo htmlspecialchars($row['category']); ?></small>
                                                 </td>
                                                 <td>
                                                     <?php 
-                                                    if($row['posted_at']){
-                                                        echo date('d-m-Y H:i', strtotime($row['posted_at'])); 
-                                                    } else {
-                                                        echo '-';
-                                                    }
+                                                        $type = $row['type'];
+                                                        $type_badge = 'badge-secondary';
+                                                        if ($type == 'Full Time') $type_badge = 'badge-success';
+                                                        elseif ($type == 'Part Time') $type_badge = 'badge-warning';
+                                                        elseif ($type == 'Contract') $type_badge = 'badge-info';
+                                                        elseif ($type == 'Freelance') $type_badge = 'badge-primary';
+                                                        elseif ($type == 'Internship') $type_badge = 'badge-dark';
                                                     ?>
+                                                    <span class="badge <?php echo $type_badge; ?>">
+                                                        <?php echo htmlspecialchars($row['type']); ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <small><?php echo htmlspecialchars($row['salary']); ?></small>
+                                                </td>
+                                                <td>
+                                                    <?php 
+                                                        $status = isset($row['status']) ? $row['status'] : 'pending';
+                                                        $status_badge = 'badge-secondary';
+                                                        $status_text = 'pending';
+                                                        
+                                                        if ($status == 'active') {
+                                                            $status_badge = 'badge-success';
+                                                            $status_text = 'Active';
+                                                        } elseif ($status == 'inactive') {
+                                                            $status_badge = 'badge-danger';
+                                                            $status_text = 'In Active';
+                                                        } 
+                                                    ?>
+                                                    <span class="badge <?php echo $status_badge; ?>">
+                                                        <?php echo $status_text; ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <small>
+                                                        <?php 
+                                                        if($row['posted_at']){
+                                                            echo date('d M Y', strtotime($row['posted_at'])); 
+                                                            echo '<br>';
+                                                            echo date('H:i', strtotime($row['posted_at'])); 
+                                                        } else {
+                                                            echo '-';
+                                                        }
+                                                        ?>
+                                                    </small>
                                                 </td>
                                                 <td class="action-buttons">
-                                                    <a href="edit_job.php?id=<?php echo $row['id']; ?>"
-                                                        class="btn btn-sm btn-warning" title="Edit">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </a>
-                                                    <button type="button" class="btn btn-sm btn-danger delete-btn"
-                                                        data-id="<?php echo $row['id']; ?>"
-                                                        data-title="<?php echo htmlspecialchars($row['title']); ?>"
-                                                        title="Hapus">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </button>
+                                                    <div class="btn-group">
+                                                        <a href="edit_job.php?id=<?php echo $row['id']; ?>"
+                                                            class="btn btn-sm btn-warning" title="Edit">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-danger delete-btn"
+                                                            data-id="<?php echo $row['id']; ?>"
+                                                            data-title="<?php echo htmlspecialchars($row['title']); ?>"
+                                                            title="Hapus">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             <?php endwhile; ?>
                                         </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Judul</th>
-                                                <th>Perusahaan</th>
-                                                <th>Lokasi</th>
-                                                <th>Kategori</th>
-                                                <th>Tipe</th>
-                                                <th>Gaji</th>
-                                                <th>Deskripsi</th>
-                                                <th>Tanggal Posting</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </tfoot>
                                     </table>
                                 </div>
                                 <!-- /.card-body -->
@@ -333,11 +352,13 @@ if(!$result){
         </div>
         <!-- /.content-wrapper -->
 
-        <!-- Control Sidebar -->
-        <aside class="control-sidebar control-sidebar-dark">
-            <!-- Control sidebar content goes here -->
-        </aside>
-        <!-- /.control-sidebar -->
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="float-right d-none d-sm-block">
+                <b>Version</b> 1.0.0
+            </div>
+            <strong>Copyright &copy; 2024 JobFinder.</strong> All rights reserved.
+        </footer>
     </div>
     <!-- ./wrapper -->
 
@@ -392,14 +413,31 @@ if(!$result){
         // Initialize DataTable
         $("#example1").DataTable({
             "responsive": true,
-            "lengthChange": false,
+            "lengthChange": true,
             "autoWidth": false,
-            "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+            "pageLength": 10,
+            "order": [
+                [0, "desc"]
+            ], // Sort by ID descending
+            "buttons": ["copy", "csv", "excel", "pdf", "print"],
+            "language": {
+                "search": "Cari:",
+                "lengthMenu": "Tampilkan _MENU_ data per halaman",
+                "zeroRecords": "Data tidak ditemukan",
+                "info": "Menampilkan halaman _PAGE_ dari _PAGES_",
+                "infoEmpty": "Tidak ada data tersedia",
+                "infoFiltered": "(difilter dari _MAX_ total data)",
+                "paginate": {
+                    "first": "Pertama",
+                    "last": "Terakhir",
+                    "next": "Selanjutnya",
+                    "previous": "Sebelumnya"
+                }
+            }
         }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
 
         // Handle delete button click
         $(document).on('click', '.delete-btn', function() {
-
             var jobId = $(this).data('id');
             var jobTitle = $(this).data('title');
 

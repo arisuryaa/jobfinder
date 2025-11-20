@@ -7,6 +7,23 @@ if(!isset($_SESSION['admin_id'])){
     exit;
 }
 
+// Handle Status Update
+if (isset($_POST['update_status'])) {
+    $application_id = intval($_POST['application_id']);
+    $new_status = $_POST['status'];
+    
+    $sql = "UPDATE applications SET status = ? WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("si", $new_status, $application_id);
+    
+    if ($stmt->execute()) {
+        $success_message = "Status lamaran berhasil diubah!";
+    } else {
+        $error_message = "Error: " . $conn->error;
+    }
+    $stmt->close();
+}
+
 // Handle Delete
 if (isset($_GET['delete'])) {
     $delete_id = intval($_GET['delete']);
@@ -60,6 +77,14 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="./plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
     <!-- Theme style -->
     <link rel="stylesheet" href="./css/adminlte.min.css">
+
+    <style>
+    .status-select {
+        padding: 2px 5px;
+        font-size: 12px;
+        border-radius: 4px;
+    }
+    </style>
 </head>
 
 <body class="hold-transition sidebar-mini dark-mode">
@@ -241,14 +266,13 @@ $result = $conn->query($sql);
                                     <table id="applicationsTable" class="table table-bordered table-striped">
                                         <thead>
                                             <tr>
-                                                <th width="5%">ID</th>
-                                                <th width="8%">User ID</th>
+                                                <th width="4%">ID</th>
                                                 <th width="18%">Posisi Dilamar</th>
                                                 <th width="15%">Perusahaan</th>
-                                                <th width="12%">Lokasi</th>
                                                 <th width="10%">Tipe</th>
                                                 <th width="12%">CV File</th>
                                                 <th width="12%">Tgl Melamar</th>
+                                                <th width="15%">Status</th>
                                                 <th width="8%">Aksi</th>
                                             </tr>
                                         </thead>
@@ -257,9 +281,7 @@ $result = $conn->query($sql);
                                             <?php while($row = $result->fetch_assoc()): ?>
                                             <tr>
                                                 <td><?php echo $row['id']; ?></td>
-                                                <td>
-                                                    <span class="badge badge-info"><?php echo $row['user_id']; ?></span>
-                                                </td>
+
                                                 <td>
                                                     <strong><?php echo htmlspecialchars($row['job_title'] ?? 'N/A'); ?></strong>
                                                     <br>
@@ -272,10 +294,7 @@ $result = $conn->query($sql);
                                                     <i class="fas fa-building text-primary"></i>
                                                     <?php echo htmlspecialchars($row['company_name'] ?? 'N/A'); ?>
                                                 </td>
-                                                <td>
-                                                    <i class="fas fa-map-marker-alt text-danger"></i>
-                                                    <?php echo htmlspecialchars($row['job_location'] ?? '-'); ?>
-                                                </td>
+
                                                 <td>
                                                     <?php 
                                                         $type = $row['job_type'] ?? '-';
@@ -290,9 +309,10 @@ $result = $conn->query($sql);
                                                         <?php echo htmlspecialchars($type); ?>
                                                     </span>
                                                 </td>
+
                                                 <td>
                                                     <?php if ($row['cv_file']): ?>
-                                                    <a href="<?php echo htmlspecialchars($row['cv_file']); ?>"
+                                                    <a href="../uploads/<?php echo htmlspecialchars($row['cv_file']); ?>"
                                                         class="btn btn-sm btn-info" target="_blank">
                                                         <i class="fas fa-file-pdf"></i> Lihat CV
                                                     </a>
@@ -307,9 +327,31 @@ $result = $conn->query($sql);
                                                         <?php echo date('H:i', strtotime($row['applied_at'])); ?>
                                                     </small>
                                                 </td>
+                                                <td>
+                                                    <?php 
+                                                        $status = $row['status'];
+                                                        $status_badge = 'badge-secondary';
+                                                        $status_text = 'Pending';
+                                                        
+                                                        if ($status == 'pending') {
+                                                            $status_badge = 'badge-info';
+                                                            $status_text = 'Pending';
+                                    
+                                                        } elseif ($status == 'approved') {
+                                                            $status_badge = 'badge-primary';
+                                                            $status_text = 'approved';
+                                                        } elseif ($status == 'rejected') {
+                                                            $status_badge = 'badge-danger';
+                                                            $status_text = 'rejected';
+                                                        }
+                                                    ?>
+                                                    <span class="badge <?php echo $status_badge; ?>">
+                                                        <?php echo $status_text; ?>
+                                                    </span>
+                                                </td>
                                                 <td class="text-center">
                                                     <div class="btn-group">
-                                                        <a href="edit_application.php?id=<?php echo $row['id']; ?>"
+                                                        <a href="edit-applicant.php?id=<?php echo $row['id']; ?>"
                                                             class="btn btn-warning btn-sm" title="Edit">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
@@ -324,7 +366,7 @@ $result = $conn->query($sql);
                                             <?php endwhile; ?>
                                             <?php else: ?>
                                             <tr>
-                                                <td colspan="9" class="text-center">
+                                                <td colspan="8" class="text-center">
                                                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                                                     <p>Belum ada lamaran masuk</p>
                                                 </td>

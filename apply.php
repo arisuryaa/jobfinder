@@ -10,7 +10,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     if(!in_array($ext,$allowed)){ $err='Format CV harus PDF/DOC/DOCX.'; }
     else {
       $filename = time().'_'.preg_replace('/[^a-zA-Z0-9._-]/','_', $_FILES['cv']['name']);
-      $target = __DIR__.'/../uploads/'.$filename;
+      $target = __DIR__.'./uploads/'.$filename;
       if(move_uploaded_file($_FILES['cv']['tmp_name'], $target)){
         $stmt = $conn->prepare('INSERT INTO applications (job_id,user_id,cv_file) VALUES (?,?,?)');
         $stmt->bind_param('iis',$job_id, $_SESSION['user_id'], $filename);
